@@ -14,6 +14,7 @@
                   (dragover)="handleDragOver($event, node);"
                   (drop)="handleDrop($event, node);"
                   (dragend)="handleDragEnd($event);">{{node.item}}</mat-label>
+                  <button mat-icon-button (click)="deleteNode(node)"><mat-icon>cancel</mat-icon></button>
   </mat-tree-node>
 
   <mat-tree-node *matTreeNodeDef="let node; when: hasNoContent" matTreeNodePadding>
@@ -43,7 +44,7 @@
                   
                   
                   (change)="todoItemSelectionToggle(node)">{{node.item}}</mat-label>
-
+<button mat-icon-button (click)="deleteNode(node)"><mat-icon>cancel</mat-icon></button>
   </mat-tree-node>
 </mat-tree>
 

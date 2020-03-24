@@ -1,8 +1,17 @@
-import { SelectionModel } from '@angular/cdk/collections';
-import { FlatTreeControl } from '@angular/cdk/tree';
-import { Component, Injectable, ElementRef, ViewChild } from '@angular/core';
-import { MatTreeFlatDataSource, MatTreeFlattener } from '@angular/material/tree';
-import { BehaviorSubject } from 'rxjs';
+import { SelectionModel } from "@angular/cdk/collections";
+import { FlatTreeControl } from "@angular/cdk/tree";
+import {
+  Component,
+  Injectable,
+  ElementRef,
+  ViewChild,
+  Input
+} from "@angular/core";
+import {
+  MatTreeFlatDataSource,
+  MatTreeFlattener
+} from "@angular/material/tree";
+import { BehaviorSubject } from "rxjs";
 
 /**
  * Node for to-do item
@@ -10,6 +19,7 @@ import { BehaviorSubject } from 'rxjs';
 export class TodoItemNode {
   children: TodoItemNode[];
   item: string;
+  parentnode: TodoItemFlatNode[];
 }
 
 /** Flat to-do item node with expandable and level information */
@@ -17,6 +27,13 @@ export class TodoItemFlatNode {
   item: string;
   level: number;
   expandable: boolean;
+
+  header: string;
+  id?: number;
+  eventName?: string;
+  presentationName?: string;
+  state?: string;
+  reportName?: string;
 }
 
 /**
@@ -24,19 +41,19 @@ export class TodoItemFlatNode {
  */
 const TREE_DATA = {
   Groceries: {
-    'Almond Meal flour': null,
-    'Organic eggs': null,
-    'Protein Powder': null,
+    "Almond Meal flour": null,
+    "Organic eggs": null,
+    "Protein Powder": null,
     Fruits: {
       Apple: null,
-      Berries: ['Blueberry', 'Raspberry'],
+      Berries: ["Blueberry", "Raspberry"],
       Orange: null
     }
   },
   Reminders: [
-    'Cook dinner',
-    'Read the Material Design spec',
-    'Upgrade Application to Angular'
+    "Cook dinner",
+    "Read the Material Design spec",
+    "Upgrade Application to Angular"
   ]
 };
 
@@ -49,7 +66,9 @@ const TREE_DATA = {
 export class ChecklistDatabase {
   dataChange = new BehaviorSubject<TodoItemNode[]>([]);
 
-  get data(): TodoItemNode[] { return this.dataChange.value; }
+  get data(): TodoItemNode[] {
+    return this.dataChange.value;
+  }
 
   constructor() {
     this.initialize();
@@ -75,7 +94,7 @@ export class ChecklistDatabase {
       node.item = key;
 
       if (value != null) {
-        if (typeof value === 'object') {
+        if (typeof value === "object") {
           node.children = this.buildFileTree(value, level + 1);
         } else {
           node.item = value;
@@ -113,7 +132,11 @@ export class ChecklistDatabase {
     const parentNode = this.getParentFromNodes(node);
     const newItem = { item: name } as TodoItemNode;
     if (parentNode != null) {
-      parentNode.children.splice(parentNode.children.indexOf(node) + 1, 0, newItem);
+      parentNode.children.splice(
+        parentNode.children.indexOf(node) + 1,
+        0,
+        newItem
+      );
     } else {
       this.data.splice(this.data.indexOf(node) + 1, 0, newItem);
     }
@@ -204,9 +227,9 @@ export class ChecklistDatabase {
 }
 
 @Component({
-  selector: 'app-drag-tree',
-  templateUrl: './drag-tree.component.html',
-  styleUrls: ['./drag-tree.component.css'],
+  selector: "app-drag-tree",
+  templateUrl: "./drag-tree.component.html",
+  styleUrls: ["./drag-tree.component.css"],
   providers: [ChecklistDatabase]
 })
 export class DragTreeComponent {
@@ -220,7 +243,7 @@ export class DragTreeComponent {
   selectedParent: TodoItemFlatNode | null = null;
 
   /** The new item's name */
-  newItemName = '';
+  newItemName = "";
 
   treeControl: FlatTreeControl<TodoItemFlatNode>;
 
@@ -229,7 +252,9 @@ export class DragTreeComponent {
   dataSource: MatTreeFlatDataSource<TodoItemNode, TodoItemFlatNode>;
 
   /** The selection for checklist */
-  checklistSelection = new SelectionModel<TodoItemFlatNode>(true /* multiple */);
+  checklistSelection = new SelectionModel<TodoItemFlatNode>(
+    true /* multiple */
+  );
 
   /* Drag and drop */
   dragNode: any;
@@ -237,12 +262,25 @@ export class DragTreeComponent {
   dragNodeExpandOverNode: any;
   dragNodeExpandOverTime: number;
   dragNodeExpandOverArea: string;
-  @ViewChild('emptyItem') emptyItem: ElementRef;
+  @ViewChild("emptyItem") emptyItem: ElementRef;
+
+  @Input() treeDataSource: TodoItemNode[];
 
   constructor(private database: ChecklistDatabase) {
-    this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel, this.isExpandable, this.getChildren);
-    this.treeControl = new FlatTreeControl<TodoItemFlatNode>(this.getLevel, this.isExpandable);
-    this.dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
+    this.treeFlattener = new MatTreeFlattener(
+      this.transformer,
+      this.getLevel,
+      this.isExpandable,
+      this.getChildren
+    );
+    this.treeControl = new FlatTreeControl<TodoItemFlatNode>(
+      this.getLevel,
+      this.isExpandable
+    );
+    this.dataSource = new MatTreeFlatDataSource(
+      this.treeControl,
+      this.treeFlattener
+    );
 
     database.dataChange.subscribe(data => {
       this.dataSource.data = [];
@@ -258,34 +296,40 @@ export class DragTreeComponent {
 
   hasChild = (_: number, _nodeData: TodoItemFlatNode) => _nodeData.expandable;
 
-  hasNoContent = (_: number, _nodeData: TodoItemFlatNode) => _nodeData.item === '';
+  hasNoContent = (_: number, _nodeData: TodoItemFlatNode) =>
+    _nodeData.item === "";
 
   /**
    * Transformer to convert nested node to flat node. Record the nodes in maps for later use.
    */
   transformer = (node: TodoItemNode, level: number) => {
     const existingNode = this.nestedNodeMap.get(node);
-    const flatNode = existingNode && existingNode.item === node.item
-      ? existingNode
-      : new TodoItemFlatNode();
+    const flatNode =
+      existingNode && existingNode.item === node.item
+        ? existingNode
+        : new TodoItemFlatNode();
     flatNode.item = node.item;
     flatNode.level = level;
-    flatNode.expandable = (node.children && node.children.length > 0);
+    flatNode.expandable = node.children && node.children.length > 0;
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  }
+  };
 
   /** Whether all the descendants of the node are selected */
   descendantsAllSelected(node: TodoItemFlatNode): boolean {
     const descendants = this.treeControl.getDescendants(node);
-    return descendants.every(child => this.checklistSelection.isSelected(child));
+    return descendants.every(child =>
+      this.checklistSelection.isSelected(child)
+    );
   }
 
   /** Whether part of the descendants are selected */
   descendantsPartiallySelected(node: TodoItemFlatNode): boolean {
     const descendants = this.treeControl.getDescendants(node);
-    const result = descendants.some(child => this.checklistSelection.isSelected(child));
+    const result = descendants.some(child =>
+      this.checklistSelection.isSelected(child)
+    );
     return result && !this.descendantsAllSelected(node);
   }
 
@@ -301,7 +345,7 @@ export class DragTreeComponent {
   /** Select the category so we can insert the new item. */
   addNewItem(node: TodoItemFlatNode) {
     const parentNode = this.flatNodeMap.get(node);
-    this.database.insertItem(parentNode, '');
+    this.database.insertItem(parentNode, "");
     this.treeControl.expand(node);
   }
 
@@ -311,9 +355,13 @@ export class DragTreeComponent {
     this.database.updateItem(nestedNode, itemValue);
   }
 
+  deleteNode(node: TodoItemFlatNode) {
+    this.database.deleteNode(this.dataSource, node);
+  }
+
   handleDragStart(event, node) {
     // Required by Firefox (https://stackoverflow.com/questions/19055264/why-doesnt-html5-drag-and-drop-work-in-firefox)
-    event.dataTransfer.setData('foo', 'bar');
+    event.dataTransfer.setData("foo", "bar");
     event.dataTransfer.setDragImage(this.emptyItem.nativeElement, 0, 0);
     this.dragNode = node;
     this.treeControl.collapse(node);
@@ -325,7 +373,10 @@ export class DragTreeComponent {
     // Handle node expand
     if (node === this.dragNodeExpandOverNode) {
       if (this.dragNode !== node && !this.treeControl.isExpanded(node)) {
-        if ((new Date().getTime() - this.dragNodeExpandOverTime) > this.dragNodeExpandOverWaitTimeMs) {
+        if (
+          new Date().getTime() - this.dragNodeExpandOverTime >
+          this.dragNodeExpandOverWaitTimeMs
+        ) {
           this.treeControl.expand(node);
         }
       }
@@ -338,11 +389,11 @@ export class DragTreeComponent {
     const percentageX = event.offsetX / event.target.clientWidth;
     const percentageY = event.offsetY / event.target.clientHeight;
     if (percentageY < 0.25) {
-      this.dragNodeExpandOverArea = 'above';
+      this.dragNodeExpandOverArea = "above";
     } else if (percentageY > 0.75) {
-      this.dragNodeExpandOverArea = 'below';
+      this.dragNodeExpandOverArea = "below";
     } else {
-      this.dragNodeExpandOverArea = 'center';
+      this.dragNodeExpandOverArea = "center";
     }
   }
 
@@ -350,12 +401,21 @@ export class DragTreeComponent {
     event.preventDefault();
     if (node !== this.dragNode) {
       let newItem: TodoItemNode;
-      if (this.dragNodeExpandOverArea === 'above') {
-        newItem = this.database.copyPasteItemAbove(this.flatNodeMap.get(this.dragNode), this.flatNodeMap.get(node));
-      } else if (this.dragNodeExpandOverArea === 'below') {
-        newItem = this.database.copyPasteItemBelow(this.flatNodeMap.get(this.dragNode), this.flatNodeMap.get(node));
+      if (this.dragNodeExpandOverArea === "above") {
+        newItem = this.database.copyPasteItemAbove(
+          this.flatNodeMap.get(this.dragNode),
+          this.flatNodeMap.get(node)
+        );
+      } else if (this.dragNodeExpandOverArea === "below") {
+        newItem = this.database.copyPasteItemBelow(
+          this.flatNodeMap.get(this.dragNode),
+          this.flatNodeMap.get(node)
+        );
       } else {
-        newItem = this.database.copyPasteItem(this.flatNodeMap.get(this.dragNode), this.flatNodeMap.get(node));
+        newItem = this.database.copyPasteItem(
+          this.flatNodeMap.get(this.dragNode),
+          this.flatNodeMap.get(node)
+        );
       }
       this.database.deleteItem(this.flatNodeMap.get(this.dragNode));
       this.treeControl.expandDescendants(this.nestedNodeMap.get(newItem));
