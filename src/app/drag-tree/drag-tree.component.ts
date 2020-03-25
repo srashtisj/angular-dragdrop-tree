@@ -105,6 +105,14 @@ export class ChecklistDatabase {
     }, []);
   }
 
+  /** Add node to to-do list */
+  insertNode(name: string): TodoItemNode {
+    const newItem = { item: name } as TodoItemNode;
+    this.data.push(newItem);
+    this.dataChange.next(this.data);
+    return newItem;
+  }
+
   /** Add an item to to-do list */
   insertItem(parent: TodoItemNode, name: string): TodoItemNode {
     if (!parent.children) {
@@ -265,6 +273,10 @@ export class DragTreeComponent {
   @ViewChild("emptyItem") emptyItem: ElementRef;
 
   @Input() treeDataSource: TodoItemNode[];
+  @Input() set addItem(node: any) {
+    console.log(node)
+    this.addNewItem(node);
+  }
 
   constructor(private database: ChecklistDatabase) {
     this.treeFlattener = new MatTreeFlattener(
@@ -343,9 +355,9 @@ export class DragTreeComponent {
   }
 
   /** Select the category so we can insert the new item. */
-  addNewItem(node: TodoItemFlatNode) {
+  addNewItem(node: any) {
     const parentNode = this.flatNodeMap.get(node);
-    this.database.insertItem(parentNode, "");
+    this.database.insertNode(node);
     this.treeControl.expand(node);
   }
 
