@@ -16,10 +16,16 @@ import { TodoItemNode } from "./drag-tree/drag-tree.component";
   styleUrls: ["cdk-drag-drop-connected-sorting-group-example.css"]
 })
 export class CdkDragDropConnectedSortingGroupExample {
-  todo : TodoItemNode[]= ["Get to work", "Pick up groceries", "Go home", "Fall asleep"];
+  todo: TodoItemNode[] = [
+    "Get to work",
+    "Pick up groceries",
+    "Go home",
+    "Fall asleep"
+  ];
 
-  done: TodoItemNode[] // = ["Get up", "Brush teeth", "Take a shower", "Check e-mail", "Walk dog"];
+  done: TodoItemNode[]; // = ["Get up", "Brush teeth", "Take a shower", "Check e-mail", "Walk dog"];
 
+  //newNode:TodoItemNode;
   drop(event: CdkDragDrop<string[]>) {
     if (event.previousContainer === event.container) {
       moveItemInArray(
@@ -30,13 +36,19 @@ export class CdkDragDropConnectedSortingGroupExample {
     } else {
       // let item = event.container.data.find(x => x == event.previousContainer.data[event.previousIndex]);
       // if (item == undefined)
-        copyArrayItem(
-          event.previousContainer.data,
-          event.container.data,
-          event.previousIndex,
-          event.currentIndex
-        );
+      copyArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
     }
+  }
+
+newNode:any;
+  add(event: CdkDragDrop<TodoItemNode[]>) {
+    console.log(event.previousContainer.data[event.previousIndex]);
+    this.newNode = event.previousContainer.data[event.previousIndex];
   }
 }
 

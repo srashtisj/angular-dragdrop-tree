@@ -18,7 +18,8 @@
 
 	<div class="example-container">
 		<h2>Done</h2>
-		<app-drag-tree cdkDropList class="example-list" (cdkDropListDropped)="drop($event)"></app-drag-tree>
+		<app-drag-tree cdkDropList class="example-list" (cdkDropListDropped)="add($event)" [addItem]="newNode">
+		</app-drag-tree>
 	</div>
 </div>
 
